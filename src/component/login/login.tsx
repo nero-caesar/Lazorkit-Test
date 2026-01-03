@@ -7,7 +7,8 @@ import { GiPadlock } from "react-icons/gi";
 import './login.css';
 import Image from 'next/image';
 import img from '../../../public/lazorkit-logo.png';
-import { useWallet } from '../../../lib/lazorkit';
+import { useWallet } from '@lazorkit/wallet';
+import { useWalletContext } from '../../app/providers';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/navigation';
@@ -15,14 +16,20 @@ import { useRouter } from 'next/navigation';
 function Login() {
 const [loading, setLoading] = React.useState(false);
 const { connect, isConnected } = useWallet();
+const { account, setAccount } = useWalletContext();
 const router = useRouter();
 
+// Handle connecting to Lazorkit wallet using passkeys
 const handleConnect = async () => {
   try {
     setLoading(true);
-    await connect(); 
+    // Lazorkit creates a wallet using passkeys (biometrics like FaceID/TouchID)
+    // This replaces traditional passwords and crypto wallet extensions
+    const walletAccount = await connect();
+    setAccount(walletAccount);
     toast.success('Connected successfully!');
-    router.push('/wallet');
+    // After connecting, redirect to wallet page
+    router.push('/dashboard');
   } catch (error) {
     toast.error('Failed to connect: ' + error);
   } finally {
@@ -70,6 +77,14 @@ const handleConnect = async () => {
         >
           {loading ? 'Connecting...' : isConnected ? 'Connected' : 'Continue with Passkey'}
         </button>
+        
+        {isConnected && account && (
+          <div className='wallet-info'>
+            <p><strong>Wallet Address:</strong> {account.publicKey.toString()}</p>
+            <p>Lazorkit wallet created using passkeys - no seed phrases needed!</p>
+          </div>
+        )}
+        
         <a href="https://docs.lazorkit.com/passkeys" target="_blank" rel="noopener noreferrer">
           Learn how passkeys work
         </a>

@@ -2,47 +2,47 @@
 
 import React from 'react'
 import './wallet.css';
-import { useWallet } from '../../../lib/lazorkit';
+import { useWallet } from '@lazorkit/wallet';
+import { useWalletContext } from '../../app/providers';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 function Wallet() {
-  const [recipient, setRecipient] = React.useState('');
-  const [amount, setAmount] = React.useState('');
   const [loading, setLoading] = React.useState(false);
-  const { signAndSendTransaction, isConnected } = useWallet();
+  const wallet = useWallet();
+  const { account } = useWalletContext();
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isConnected) {
+  // This page is accessible only after connecting with Lazorkit
+  // It demonstrates gasless transactions using passkey-authenticated wallets
+
+  const handleSend = async () => {
+    if (!wallet.isConnected || !account) {
       toast.error('Please connect your wallet first');
-      return;
-    }
-    if (!recipient || !amount) {
-      toast.error('Please fill in all fields');
       return;
     }
 
     try {
       setLoading(true);
-      // For demo, using SOL transfer instead of USDC
+      // Create a simple SOL transfer transaction
+      // In production, this would be a USDC transfer, but using SOL for demo
       const instructions = [
         SystemProgram.transfer({
-          fromPubkey: new PublicKey('11111111111111111111111111111112'), // Mock from
-          toPubkey: new PublicKey(recipient),
-          lamports: parseFloat(amount) * LAMPORTS_PER_SOL,
+          fromPubkey: account.publicKey, // Use the connected wallet's public key
+          toPubkey: new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'), // USDC mint address as example recipient
+          lamports: 0.001 * LAMPORTS_PER_SOL, // Small test amount
         }),
       ];
 
-      const signature = await signAndSendTransaction({
+      // Lazorkit handles signing with passkeys and sends gaslessly via paymaster
+      // No need for user to hold SOL for gas fees
+      const signature = await wallet.signAndSendTransaction({
         instructions,
-        transactionOptions: { feeToken: 'USDC' },
+        transactionOptions: { feeToken: 'USDC' }, // Pay gas in USDC
       });
 
-      toast.success(`Transaction sent! Signature: ${signature}`);
-      setRecipient('');
-      setAmount('');
+      toast.success(`Gasless transaction sent! Signature: ${signature}`);
+      // Reset any form state if needed
     } catch (error) {
       toast.error('Failed to send transaction: ' + error);
     } finally {
@@ -53,30 +53,21 @@ function Wallet() {
   return (
     <section className='section2'>
         <div className='wallet-con'>
-            <h1>Send Gasless USDC Transaction</h1>
-            <form className='wallet-form' onSubmit={handleSend}>
-                <div>
-                    <label>Recipient Address</label>
-                    <input
-                      type="text"
-                      placeholder='Enter recipient address'
-                      value={recipient}
-                      onChange={(e) => setRecipient(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <label>Amount (USDC)</label>
-                    <input
-                      type="number"
-                      placeholder='Enter amount in USDC'
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                    />
-                </div>
-                <button className='wallet-btn' type="submit" disabled={loading || !isConnected}>
-                  {loading ? 'Sending...' : 'Send USDC'}
-                </button>
-            </form>
+            <h1>Dashboard</h1>
+            
+            {/* Display wallet connection status and address */}
+            <div className='wallet-status'>
+              <p><strong>Connection Status:</strong> {wallet.isConnected ? 'Connected' : 'Not Connected'}</p>
+              {account && (
+                <p><strong>Wallet Address:</strong> {account.publicKey.toString()}</p>
+              )}
+            </div>
+            
+            <h2>Send Gasless Transaction</h2>
+            <p>Test gasless transaction: Send 0.001 SOL to a demo address</p>
+            <button className='wallet-btn' onClick={handleSend} disabled={loading || !wallet.isConnected}>
+              {loading ? 'Sending...' : 'Send Test Transaction'}
+            </button>
             <p className='wallet-text'>Fees are sponsored by your smart wallet</p>
         </div>
         <ToastContainer
