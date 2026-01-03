@@ -3,6 +3,6 @@
 - Secondary Accent (Soft Teal): rgb(46, 211, 198)
 - Background (Dark Charcoal): rgb(15, 17, 21)
 - Card Surface (Lighter Charcoal): rgb(26, 29, 36)
+- Card Border (Teal): rgb(46,211,198)
 - Text Primary (White): rgb(255, 255, 255)
 - Text Secondary (Muted Gray): rgb(156, 163, 175)
-

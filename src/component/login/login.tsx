@@ -8,18 +8,28 @@ import './login.css';
 import Image from 'next/image';
 import img from '../../../public/lazorkit-logo.png';
 import { useWallet } from '../../../lib/lazorkit';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from 'next/navigation';
 
 function Login() {
-  const { connect, isConnected } = useWallet();
+const [loading, setLoading] = React.useState(false);
+const { connect, isConnected } = useWallet();
+const router = useRouter();
 
-  const handleConnect = async () => {
-    try {
-      await connect();
-      alert('Connected successfully!');
-    } catch (error) {
-      alert('Failed to connect: ' + error);
-    }
-  };
+const handleConnect = async () => {
+  try {
+    setLoading(true);
+    await connect(); 
+    toast.success('Connected successfully!');
+    router.push('/wallet');
+  } catch (error) {
+    toast.error('Failed to connect: ' + error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <section className='section1'>
@@ -41,10 +51,29 @@ function Login() {
           <GoShieldCheck size={55} color='rgb(91, 46, 255)'/>
           <GiPadlock size={55} color='rgb(91, 46, 255)'/>
         </div>
-        <button className='login-btn' onClick={handleConnect} disabled={isConnected}>
-          {isConnected ? 'Connected' : 'Continue with Passkey'}
+
+        <ToastContainer 
+          position="top-right" 
+          autoClose={3000} 
+          hideProgressBar={false} 
+          newestOnTop={true} 
+          closeOnClick 
+          pauseOnHover 
+          draggable 
+          theme="dark"
+        />
+
+        <button
+          className={`login-btn ${isConnected ? 'connected' : ''}`}
+          onClick={handleConnect}
+          disabled={isConnected || loading}
+        >
+          {loading ? 'Connecting...' : isConnected ? 'Connected' : 'Continue with Passkey'}
         </button>
-        <a href="">Learn how passkeys work</a>
+        <a href="https://docs.lazorkit.com/passkeys" target="_blank" rel="noopener noreferrer">
+          Learn how passkeys work
+        </a>
+
       </div>
     </section>
   )
