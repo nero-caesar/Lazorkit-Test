@@ -1,13 +1,28 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { LazorkitProvider, useWallet as useLazorkitWallet } from "@lazorkit/wallet";
+import { PublicKey } from '@solana/web3.js';
 
-interface WalletContextType {
-  account: any;
-  setAccount: (account: any) => void;
+// ----------------------------
+// Types
+// ----------------------------
+interface WalletAccount {
+  publicKey?: PublicKey | string; // Make optional since Lazorkit WalletInfo might not have it
+  balance?: number;
+  // Allow any additional properties from Lazorkit WalletInfo
+  [key: string]: any;
 }
 
+interface WalletContextType {
+  account: WalletAccount | null;
+  setAccount: (account: WalletAccount) => void;
+  lazorkitWallet: ReturnType<typeof useLazorkitWallet>;
+}
+
+// ----------------------------
+// Context
+// ----------------------------
 const WalletContext = createContext<WalletContextType | null>(null);
 
 export const useWalletContext = () => {
@@ -16,26 +31,31 @@ export const useWalletContext = () => {
   return context;
 };
 
-function WalletProviderInner({ children }: { children: React.ReactNode }) {
-  const [account, setAccount] = useState<any>(null);
+// ----------------------------
+// Inner Provider for app state
+// ----------------------------
+function WalletProviderInner({ children }: { children: ReactNode }) {
+  const [account, setAccount] = useState<WalletAccount | null>(null);
+  const lazorkitWallet = useLazorkitWallet(); // gives connect(), sendTransaction(), isConnected, etc.
 
   return (
-    <WalletContext.Provider value={{ account, setAccount }}>
+    <WalletContext.Provider value={{ account, setAccount, lazorkitWallet }}>
       {children}
     </WalletContext.Provider>
   );
 }
 
-export default function Providers({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// ----------------------------
+// Main Providers
+// ----------------------------
+export default function Providers({ children }: { children: ReactNode }) {
   return (
     <LazorkitProvider
-      rpcUrl="https://api.devnet.solana.com"
-      portalUrl={process.env.LAZORKIT_PORTAL_URL || "https://portal.lazorkit.com"}
-      paymasterConfig={{ paymasterUrl: process.env.LAZORKIT_PAYMASTER_URL || "https://paymaster.lazorkit.com" }}
+      rpcUrl="https://api.devnet.solana.com" // Solana RPC endpoint
+      portalUrl={process.env.NEXT_PUBLIC_LAZORKIT_PORTAL_URL || "https://portal.lazor.sh"} // passkey portal
+      paymasterConfig={{
+        paymasterUrl: process.env.NEXT_PUBLIC_LAZORKIT_PAYMASTER_URL || "https://kora.devnet.lazorkit.com",
+      }} // gasless transactions
     >
       <WalletProviderInner>
         {children}

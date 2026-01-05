@@ -1,4 +1,4 @@
-.section2{
+.section3{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -8,7 +8,7 @@
     width: 100vw;
 }
 
-.wallet-con{
+.transaction-con{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -18,47 +18,16 @@
     border-radius: 20px;
     width: 35vw;
     height: 90vh;
-    gap: 30px;
-}
-.wallet-con h1{
-    text-align: center;
-}
-
-.wallet-form{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     gap: 20px;
-    width: 80%;
-}
-.wallet-form input{
-    width: 30vw;
-    height: 50px;
-    border-radius: 15px;
-    border: 1px solid rgb(156, 163, 175);
-    background-color: rgb(36, 39, 46);
-    color: rgb(255, 255, 255);
-    font-size: 16px;
-}
-.wallet-form input::placeholder{
-    color: rgba(156, 163, 175, 0.6);
-    padding-left: 15px;
-}
-.wallet-form input:focus{
-    outline: none;
-    border: 2px solid rgb(91, 46, 255);
-}
-.wallet-form label{
-    display: flex;
-    align-self: flex-start;
-    font-weight: 600;
-    font-size: 16px;
-    padding-bottom: 10px;
-    color: rgb(255, 255, 255);
+    padding: 20px;
 }
 
-.wallet-status {
+.transaction-con h1{
+    text-align: center;
+    color: white;
+}
+
+.wallet-info {
     text-align: center;
     padding: 15px;
     background-color: rgb(34, 34, 34);
@@ -67,30 +36,93 @@
     width: 80%;
 }
 
-.wallet-status p {
+.wallet-info p {
     margin: 5px 0;
     word-break: break-all;
+    color: white;
 }
 
-.wallet-btn{
+.transaction-form{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 80%;
+}
+
+.transaction-form input{
+    width: 100%;
+    height: 50px;
+    border-radius: 15px;
+    border: 1px solid rgb(156, 163, 175);
+    background-color: rgb(36, 39, 46);
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    padding: 0 15px;
+}
+
+.transaction-form input::placeholder{
+    color: rgba(156, 163, 175, 0.6);
+}
+
+.transaction-form input:focus{
+    outline: none;
+    border: 2px solid rgb(91, 46, 255);
+}
+
+.transaction-form label{
+    display: flex;
+    align-self: flex-start;
+    font-weight: 600;
+    font-size: 16px;
+    padding-bottom: 10px;
+    color: rgb(255, 255, 255);
+}
+
+.transaction-btn{
     border: none;
     cursor: pointer;
     font-weight: bold;
     font-size: 17px;
-    border-radius: 15px;
-    width: 30vw;
-    height: 50px;
+    border-radius: 10px;
+    padding: 15px 35px;
     background-color: rgb(91, 46, 255);
+    color: white;
     transition: background-color 0.3s ease-in-out;
+    width: 100%;
 }
-.wallet-btn:hover{
+
+.transaction-btn:hover:not(:disabled){
     background-color: rgb(109, 40, 217);
 }
 
-.wallet-btn.secondary {
-    background-color: rgb(34, 197, 94);
+.transaction-btn:disabled {
+    background-color: rgb(75, 85, 99);
+    cursor: not-allowed;
 }
 
-.wallet-btn.secondary:hover {
-    background-color: rgb(22, 163, 74);
+.transaction-info {
+    text-align: center;
+    padding: 15px;
+    background-color: rgb(34, 34, 34);
+    border-radius: 10px;
+    border: 1px solid rgb(156, 163, 175);
+    width: 80%;
+}
+
+.transaction-info h3 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.transaction-info ul {
+    list-style: none;
+    padding: 0;
+}
+
+.transaction-info li {
+    color: rgb(156, 163, 175);
+    margin: 5px 0;
+    font-size: 14px;
 }
