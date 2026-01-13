@@ -3,7 +3,7 @@
 import React from 'react'
 import './transaction.css';
 import { useWallet } from '@lazorkit/wallet';
-import { useWalletContext } from '../../app/providers';
+import { useAccount } from '../../app/providers';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -15,7 +15,7 @@ function Transaction() {
   const [amount, setAmount] = React.useState('0.001');
   const [loading, setLoading] = React.useState(false);
   const wallet = useWallet();
-  const { account } = useWalletContext();
+  const { account } = useAccount();
   const router = useRouter();
 
   // This page demonstrates gasless transactions using Lazorkit
@@ -23,7 +23,7 @@ function Transaction() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.isConnected || !account || !account.publicKey) {
+    if (!wallet.isConnected || !account) {
       toast.error('Please connect your wallet first');
       router.push('/');
       return;
@@ -44,9 +44,14 @@ function Transaction() {
       debugLazorkit('Starting transaction', { recipient, amount });
 
       // Convert publicKey to PublicKey object if it's a string
-      const fromPubkey = typeof account.publicKey === 'string' 
-        ? new PublicKey(account.publicKey) 
-        : account.publicKey;
+      const fromPubkey = account.publicKey 
+        ? (typeof account.publicKey === 'string' ? new PublicKey(account.publicKey) : account.publicKey)
+        : account.address ? new PublicKey(account.address) : null;
+
+      if (!fromPubkey) {
+        toast.error('Invalid wallet address');
+        return;
+      }
 
       // Create a simple SOL transfer transaction
       // This demonstrates gasless sending - no SOL needed for fees!
@@ -83,12 +88,7 @@ function Transaction() {
     }
   };
 
-  // If not connected, redirect to login
-  React.useEffect(() => {
-    if (!wallet.isConnected) {
-      router.push('/');
-    }
-  }, [wallet.isConnected, router]);
+  // Removed automatic redirect logic - pages should only read wallet state
 
   if (!wallet.isConnected) {
     return <div>Please connect your wallet first...</div>;
@@ -100,7 +100,7 @@ function Transaction() {
             <h1>Send Gasless Transaction</h1>
 
             <div className='wallet-info'>
-              <p><strong>Your Wallet:</strong> {account?.publicKey ? (typeof account.publicKey === 'string' ? account.publicKey : account.publicKey.toString()) : 'Not available'}</p>
+              <p><strong>Your Wallet:</strong> {account ? (account.publicKey ? (typeof account.publicKey === 'string' ? account.publicKey : account.publicKey.toString()) : account.address || 'Not available') : 'Not available'}</p>
               <p>Connected via Lazorkit passkeys</p>
             </div>
 

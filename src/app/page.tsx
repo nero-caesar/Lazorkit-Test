@@ -1,13 +1,12 @@
-import React from 'react'
-import Login from '../component/login/login';
-import styles from './page.module.css';
-  
-function Page() {
+"use client";
+
+import Link from 'next/link';
+
+export default function Home() {
   return (
     <main>
-      <Login />
+      <h1>Lazorkit Demo</h1>
+      <Link href="/login">Get Started</Link>
     </main>
-  )
+  );
 }
-
-export default Page

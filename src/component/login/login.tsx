@@ -8,16 +8,16 @@ import "./login.css";
 import Image from "next/image";
 import img from "../../../public/lazorkit-logo.png";
 import { useWallet } from "@lazorkit/wallet";
-import { useWalletContext } from "../../app/providers";
+import { useAccount } from "../../app/providers";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { PublicKey } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
+// router-based redirects moved to app/login/page.tsx
 
 function Login() {
   const [loading, setLoading] = React.useState(false);
   const { connect, isConnected } = useWallet();
-  const { account, setAccount } = useWalletContext();
+  const { account, setAccount } = useAccount();
   const router = useRouter();
 
 
@@ -26,25 +26,18 @@ function Login() {
       setLoading(true);
       console.log("Starting Lazorkit connection...");
 
-      const walletAccount = await connect(); 
+      const walletAccount = await connect();
+      console.log("Wallet account received:", walletAccount);
+      console.log("Account keys:", Object.keys(walletAccount || {}));
+      
+      if (walletAccount) {
+        setAccount(walletAccount);
+        console.log("Account set in context:", walletAccount);
+      } else {
+        console.log("No account received from connect()");
+      }
 
-      console.log("Connection successful:", walletAccount);
-
-      const walletAny = walletAccount as any;
-
-      const adaptedAccount = {
-        ...walletAny,
-        publicKey:
-          walletAny.publicKey instanceof PublicKey
-            ? walletAny.publicKey
-            : walletAny.publicKey
-            ? new PublicKey(walletAny.publicKey)
-            : walletAny.address
-            ? new PublicKey(walletAny.address)
-            : null,
-      };
-
-      setAccount(adaptedAccount);
+      console.log("Connection successful!");
       toast.success("Connected successfully!");
     } catch (error) {
       console.error("Lazorkit connection failed:", error);
@@ -55,10 +48,12 @@ function Login() {
   };
 
   React.useEffect(() => {
-    if (isConnected && account) {
-      router.push("/dashboard");
+    console.log('Login component useEffect:', { isConnected, account });
+    if (account && (account.publicKey || account.address)) {
+      console.log('Login component: redirecting to dashboard');
+      router.push('/dashboard');
     }
-  }, [isConnected, account, router]);
+  }, [account, router]);
 
   return (
     <section className="section1">
@@ -110,7 +105,7 @@ function Login() {
               <strong>Wallet Address:</strong>{" "}
               {account.publicKey
                 ? account.publicKey.toString()
-                : "Wallet connected"}
+                : account.address || "Wallet connected"}
             </p>
             <p>
               Lazorkit wallet created using passkeys — no seed phrases needed!
