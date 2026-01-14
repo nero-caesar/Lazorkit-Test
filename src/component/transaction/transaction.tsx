@@ -3,7 +3,6 @@
 import React from 'react'
 import './transaction.css';
 import { useWallet } from '@lazorkit/wallet';
-import { useAccount } from '../../app/providers';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -15,25 +14,23 @@ function Transaction() {
   const [amount, setAmount] = React.useState('0.001');
   const [loading, setLoading] = React.useState(false);
   const wallet = useWallet();
-  const { account } = useAccount();
   const router = useRouter();
-
-  // This page demonstrates gasless transactions using Lazorkit
-  // Users can send SOL without holding SOL for gas fees
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.isConnected || !account) {
+    
+    // Strict guards: check both isConnected AND publicKey
+    if (!wallet.isConnected || !wallet.publicKey) {
       toast.error('Please connect your wallet first');
       router.push('/');
       return;
     }
+    
     if (!recipient || !amount) {
       toast.error('Please fill in all fields');
       return;
     }
 
-    // Validate recipient address
     if (!isValidSolanaAddress(recipient)) {
       toast.error('Please enter a valid Solana address');
       return;
@@ -43,32 +40,19 @@ function Transaction() {
       setLoading(true);
       debugLazorkit('Starting transaction', { recipient, amount });
 
-      // Convert publicKey to PublicKey object if it's a string
-      const fromPubkey = account.publicKey 
-        ? (typeof account.publicKey === 'string' ? new PublicKey(account.publicKey) : account.publicKey)
-        : account.address ? new PublicKey(account.address) : null;
+      // Use wallet.publicKey directly
+      const fromPubkey = wallet.publicKey;
 
-      if (!fromPubkey) {
-        toast.error('Invalid wallet address');
-        return;
-      }
-
-      // Create a simple SOL transfer transaction
-      // This demonstrates gasless sending - no SOL needed for fees!
       const instructions = [
         SystemProgram.transfer({
-          fromPubkey: fromPubkey, // From the Lazorkit smart wallet
-          toPubkey: new PublicKey(recipient), // To the specified recipient
-          lamports: parseFloat(amount) * LAMPORTS_PER_SOL, // Convert SOL to lamports
+          fromPubkey,
+          toPubkey: new PublicKey(recipient),
+          lamports: parseFloat(amount) * LAMPORTS_PER_SOL,
         }),
       ];
 
       debugLazorkit('Sending transaction with instructions:', instructions);
 
-      // Lazorkit handles:
-      // 1. Biometric/passkey confirmation (FaceID, TouchID, etc.)
-      // 2. Transaction signing with hardware-bound credentials
-      // 3. Gasless sending via paymaster (fees paid in USDC)
       const signature = await wallet.signAndSendTransaction({
         instructions,
         transactionOptions: GASLESS_TX_OPTIONS,
@@ -77,7 +61,6 @@ function Transaction() {
       debugLazorkit('Transaction successful:', signature);
       toast.success(`Gasless transaction sent! Signature: ${signature}`);
 
-      // Reset form
       setRecipient('');
       setAmount('0.001');
     } catch (error) {
@@ -87,8 +70,6 @@ function Transaction() {
       setLoading(false);
     }
   };
-
-  // Removed automatic redirect logic - pages should only read wallet state
 
   if (!wallet.isConnected) {
     return <div>Please connect your wallet first...</div>;
@@ -100,7 +81,7 @@ function Transaction() {
             <h1>Send Gasless Transaction</h1>
 
             <div className='wallet-info'>
-              <p><strong>Your Wallet:</strong> {account ? (account.publicKey ? (typeof account.publicKey === 'string' ? account.publicKey : account.publicKey.toString()) : account.address || 'Not available') : 'Not available'}</p>
+              <p><strong>Your Wallet:</strong> {wallet.publicKey ? wallet.publicKey.toString() : 'Not available'}</p>
               <p>Connected via Lazorkit passkeys</p>
             </div>
 
@@ -127,7 +108,7 @@ function Transaction() {
                       required
                     />
                 </div>
-                <button className='transaction-btn' type="submit" disabled={loading}>
+                <button className='transaction-btn' type="submit" disabled={loading || !wallet.publicKey}>
                   {loading ? 'Sending...' : 'Send Gasless Transaction'}
                 </button>
             </form>

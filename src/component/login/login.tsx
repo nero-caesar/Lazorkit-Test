@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { IoFingerPrint } from "react-icons/io5";
 import { GoShieldCheck } from "react-icons/go";
 import { GiPadlock } from "react-icons/gi";
@@ -8,37 +8,33 @@ import "./login.css";
 import Image from "next/image";
 import img from "../../../public/lazorkit-logo.png";
 import { useWallet } from "@lazorkit/wallet";
-import { useAccount } from "../../app/providers";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
-// router-based redirects moved to app/login/page.tsx
 
 function Login() {
   const [loading, setLoading] = React.useState(false);
-  const { connect, isConnected } = useWallet();
-  const { account, setAccount } = useAccount();
+  const wallet = useWallet();
   const router = useRouter();
 
+  // React to wallet connection state changes
+  useEffect(() => {
+    if (wallet.isConnected && wallet.publicKey) {
+      router.push('/dashboard');
+    }
+  }, [wallet.isConnected, wallet.publicKey, router]);
 
   const handleConnect = async () => {
     try {
       setLoading(true);
       console.log("Starting Lazorkit connection...");
-
-      const walletAccount = await connect();
-      console.log("Wallet account received:", walletAccount);
-      console.log("Account keys:", Object.keys(walletAccount || {}));
       
-      if (walletAccount) {
-        setAccount(walletAccount);
-        console.log("Account set in context:", walletAccount);
-      } else {
-        console.log("No account received from connect()");
-      }
-
-      console.log("Connection successful!");
-      toast.success("Connected successfully!");
+      // Call connect() - do NOT store the result
+      // Lazorkit will update wallet state asynchronously
+      await wallet.connect();
+      
+      console.log("Connect initiated. Wallet state will update.");
+      toast.success("Initiating connection...");
     } catch (error) {
       console.error("Lazorkit connection failed:", error);
       toast.error("Failed to connect");
@@ -46,14 +42,6 @@ function Login() {
       setLoading(false);
     }
   };
-
-  React.useEffect(() => {
-    console.log('Login component useEffect:', { isConnected, account });
-    if (account && (account.publicKey || account.address)) {
-      console.log('Login component: redirecting to dashboard');
-      router.push('/dashboard');
-    }
-  }, [account, router]);
 
   return (
     <section className="section1">
@@ -88,24 +76,22 @@ function Login() {
         />
 
         <button
-          className={`login-btn ${isConnected ? "connected" : ""}`}
+          className={`login-btn ${wallet.isConnected ? "connected" : ""}`}
           onClick={handleConnect}
-          disabled={isConnected || loading}
+          disabled={wallet.isConnected || loading}
         >
           {loading
             ? "Connecting..."
-            : isConnected
+            : wallet.isConnected
             ? "Connected"
             : "Continue with Passkey"}
         </button>
 
-        {isConnected && account && (
+        {wallet.isConnected && wallet.publicKey && (
           <div className="wallet-info">
             <p>
               <strong>Wallet Address:</strong>{" "}
-              {account.publicKey
-                ? account.publicKey.toString()
-                : account.address || "Wallet connected"}
+              {wallet.publicKey.toString()}
             </p>
             <p>
               Lazorkit wallet created using passkeys — no seed phrases needed!

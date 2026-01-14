@@ -3,7 +3,6 @@
 import React from 'react';
 import './wallet.css';
 import { useWallet } from '@lazorkit/wallet';
-import { useAccount } from '../../app/providers';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useRouter } from 'next/navigation';
@@ -12,12 +11,11 @@ import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 function Wallet() {
   const [loading, setLoading] = React.useState(false);
   const wallet = useWallet();
-  const { account } = useAccount();
   const router = useRouter();
 
   const handleSend = async () => {
-    // HARD GUARD — prevents the crash
-    if (!wallet.isConnected || !account) {
+    // Strict guards: only proceed if connected AND publicKey exists
+    if (!wallet.isConnected || !wallet.publicKey) {
       toast.error('Wallet not connected');
       return;
     }
@@ -25,14 +23,7 @@ function Wallet() {
     try {
       setLoading(true);
 
-      const fromPubkey = account.publicKey 
-        ? (typeof account.publicKey === 'string' ? new PublicKey(account.publicKey) : account.publicKey)
-        : account.address ? new PublicKey(account.address) : null;
-
-      if (!fromPubkey) {
-        toast.error('Invalid wallet address');
-        return;
-      }
+      const fromPubkey = wallet.publicKey;
 
       const instructions = [
         SystemProgram.transfer({
@@ -71,12 +62,10 @@ function Wallet() {
             {wallet.isConnected ? 'Connected' : 'Not Connected'}
           </p>
 
-          {account && (
+          {wallet.isConnected && wallet.publicKey && (
             <p>
               <strong>Wallet Address:</strong>{' '}
-              {account.publicKey 
-                ? (typeof account.publicKey === 'string' ? account.publicKey : account.publicKey.toString())
-                : account.address || 'Not available'}
+              {wallet.publicKey.toString()}
             </p>
           )}
         </div>
@@ -87,7 +76,7 @@ function Wallet() {
         <button
           className="wallet-btn"
           onClick={handleSend}
-          disabled={loading || !wallet.isConnected}
+          disabled={loading || !wallet.isConnected || !wallet.publicKey}
         >
           {loading ? 'Sending...' : 'Send Test Transaction'}
         </button>
