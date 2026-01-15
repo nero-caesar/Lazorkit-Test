@@ -19,10 +19,11 @@ function Login() {
 
   // React to wallet connection state changes
   useEffect(() => {
-    if (wallet.isConnected && wallet.publicKey) {
+    if (wallet?.isConnected && wallet?.publicKey) {
+      console.log("Wallet connected, redirecting to dashboard...");
       router.push('/dashboard');
     }
-  }, [wallet.isConnected, wallet.publicKey, router]);
+  }, [wallet?.isConnected, wallet?.publicKey, router]);
 
   const handleConnect = async () => {
     try {
@@ -76,18 +77,18 @@ function Login() {
         />
 
         <button
-          className={`login-btn ${wallet.isConnected ? "connected" : ""}`}
+          className={`login-btn ${wallet?.isConnected ? "connected" : ""}`}
           onClick={handleConnect}
-          disabled={wallet.isConnected || loading}
+          disabled={wallet?.isConnected || loading}
         >
           {loading
             ? "Connecting..."
-            : wallet.isConnected
+            : wallet?.isConnected
             ? "Connected"
             : "Continue with Passkey"}
         </button>
 
-        {wallet.isConnected && wallet.publicKey && (
+        {wallet?.isConnected && wallet?.publicKey && (
           <div className="wallet-info">
             <p>
               <strong>Wallet Address:</strong>{" "}

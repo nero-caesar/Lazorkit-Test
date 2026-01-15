@@ -1,12 +1,7 @@
 "use client";
 
-import Link from 'next/link';
+import Login from '@/component/login/login';
 
 export default function Home() {
-  return (
-    <main>
-      <h1>Lazorkit Demo</h1>
-      <Link href="/login">Get Started</Link>
-    </main>
-  );
+  return <Login />;
 }
